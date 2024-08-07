@@ -36,6 +36,16 @@ spec:
                   - targets: ['alertmanager-operated.argocd.svc.cluster.local:9093']
         alertmanager:
           enabled: true
+          config:
+            route:
+              routes:
+              - receiver: 'flock'
+                matchers:
+                  - alertname =~ "(.*)"
+            receivers:
+            - name: 'flock'
+              webhook_configs:
+              - url: 'https://api.flock.com/hooks/sendMessage/f9775a46-b612-4c17-9808-1a83f6dd0142'
         nodeExporter:
           enabled: false
     chart: kube-prometheus-stack
