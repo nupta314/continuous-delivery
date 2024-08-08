@@ -37,15 +37,45 @@ spec:
         alertmanager:
           enabled: true
           config:
+            global:
+              resolve_timeout: 5m
+            inhibit_rules:
+              - source_matchers:
+                  - 'severity = critical'
+                target_matchers:
+                  - 'severity =~ warning|info'
+                equal:
+                  - 'namespace'
+                  - 'alertname'
+              - source_matchers:
+                  - 'severity = warning'
+                target_matchers:
+                  - 'severity = info'
+                equal:
+                  - 'namespace'
+                  - 'alertname'
+              - source_matchers:
+                  - 'alertname = InfoInhibitor'
+                target_matchers:
+                  - 'severity = info'
+                equal:
+                  - 'namespace'
             route:
+              group_by: ['namespace']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 12h
+              receiver: 'null'
               routes:
               - receiver: 'flock'
                 matchers:
-                  - alertname =~ "(.*)"
+                  - alertname =~ "InfoInhibitor|Watchdog"
             receivers:
             - name: 'flock'
               webhook_configs:
               - url: 'https://api.flock.com/hooks/sendMessage/f9775a46-b612-4c17-9808-1a83f6dd0142'
+            templates:
+            - '/etc/alertmanager/config/*.tmpl'
         nodeExporter:
           enabled: false
     chart: kube-prometheus-stack
